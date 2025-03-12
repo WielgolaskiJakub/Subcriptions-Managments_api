@@ -1,4 +1,4 @@
-package org.example.subcriptionsmanagments_api.model.repository;
+package org.example.subcriptionsmanagments_api.repository;
 
 import org.example.subcriptionsmanagments_api.model.Subscription;
 import org.springframework.data.jpa.repository.JpaRepository;
