@@ -1,7 +1,6 @@
 package com.example;
-
-import org.example.subcriptionsmanagments_api.model.Subscription;
-import org.example.subcriptionsmanagments_api.repository.SubscriptionRepository;
+import com.example.subcriptionsmanagments_api.model.Subscription;
+import com.example.subcriptionsmanagments_api.repository.SubscriptionRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.boot.SpringApplication;

@@ -1,4 +1,4 @@
-package org.example.subcriptionsmanagments_api.model;
+package com.example.subcriptionsmanagments_api.model;
 import jakarta.persistence.*;
 import lombok.*;
 
