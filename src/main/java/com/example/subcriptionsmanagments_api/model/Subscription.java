@@ -1,8 +1,11 @@
 package com.example.subcriptionsmanagments_api.model;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
+
 
 @Entity
 @Table(name = "subscription")
@@ -19,5 +22,6 @@ public class Subscription {
 
     private String name;
     private double price;
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate renewalDate;
 }
