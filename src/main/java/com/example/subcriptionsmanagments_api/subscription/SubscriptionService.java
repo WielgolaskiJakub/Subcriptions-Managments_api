@@ -1,7 +1,5 @@
-package com.example.subcriptionsmanagments_api.service;
+package com.example.subcriptionsmanagments_api.subscription;
 
-import com.example.subcriptionsmanagments_api.model.Subscription;
-import com.example.subcriptionsmanagments_api.repository.SubscriptionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -38,7 +36,7 @@ public class SubscriptionService {
         return subscriptionRepository.save(subscription);
     }
 
-    public Subscription updateSubscription(Long id, Subscription newSubscription) {
+    public Subscription updateByPutSubscription(Long id, Subscription newSubscription) {
         return subscriptionRepository.findById(id).map(subscription -> {
             subscription.setName(newSubscription.getName());
             subscription.setPrice(newSubscription.getPrice());

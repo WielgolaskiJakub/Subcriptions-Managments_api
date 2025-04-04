@@ -1,6 +1,5 @@
-package com.example.subcriptionsmanagments_api.repository;
+package com.example.subcriptionsmanagments_api.user;
 
-import com.example.subcriptionsmanagments_api.model.Users;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

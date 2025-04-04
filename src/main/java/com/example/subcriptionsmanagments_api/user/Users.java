@@ -1,4 +1,4 @@
-package com.example.subcriptionsmanagments_api.model;
+package com.example.subcriptionsmanagments_api.user;
 
 import jakarta.persistence.*;
 

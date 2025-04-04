@@ -1,8 +1,6 @@
-package com.example.subcriptionsmanagments_api.controller;
+package com.example.subcriptionsmanagments_api.subscription;
 
 
-import com.example.subcriptionsmanagments_api.model.Subscription;
-import com.example.subcriptionsmanagments_api.service.SubscriptionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -30,7 +28,7 @@ public class SubscriptionController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Subscription> getSubscription(@PathVariable Long id) {
+    public ResponseEntity<?> getSubscription(@PathVariable Long id) {
         try {
             Subscription subscription = subscriptionService.findById(id);
             return ResponseEntity.ok(subscription);
@@ -54,7 +52,7 @@ public class SubscriptionController {
     @PutMapping("/{id}")
     public ResponseEntity<?> updateSubscription(@PathVariable Long id, @RequestBody Subscription subscription) {
         try {
-            Subscription updatedSubscription = subscriptionService.updateSubscription(id, subscription);
+            Subscription updatedSubscription = subscriptionService.updateByPutSubscription(id, subscription);
             return ResponseEntity.ok(updatedSubscription);
         } catch (RuntimeException e) {
             return ResponseEntity.status(400).body(e.getMessage());

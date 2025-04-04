@@ -1,8 +1,6 @@
-package com.example.subcriptionsmanagments_api.controller;
+package com.example.subcriptionsmanagments_api.user;
 
 
-import com.example.subcriptionsmanagments_api.model.Users;
-import com.example.subcriptionsmanagments_api.service.UsersService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -39,15 +37,30 @@ public class UsersController {
 
     @PostMapping
     public ResponseEntity<?> createUser(@RequestBody Users user) {
-        try{
+        try {
             Users users = usersService.createUser(user);
             return ResponseEntity.status(201).body(users);
-        } catch (IllegalArgumentException e){
+        } catch (IllegalArgumentException e) {
             return ResponseEntity.status(400).body(e.getMessage());
-        }catch (RuntimeException e){
+        } catch (RuntimeException e) {
             return ResponseEntity.status(500).body("Blad pdczas zapisywania uzytkownika " + e.getMessage());
         }
+    }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateUser(@PathVariable Long id, @RequestBody Users user) {
+        try {
+            Users users = usersService.updateByPutUser(id, user);
+            return ResponseEntity.ok(users);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(400).body(e.getMessage());
+        }
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
+        usersService.deleteUser(id);
+        return ResponseEntity.noContent().build();
     }
 }
 
