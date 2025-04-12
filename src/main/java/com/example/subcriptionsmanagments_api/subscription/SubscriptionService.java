@@ -1,9 +1,9 @@
 package com.example.subcriptionsmanagments_api.subscription;
 
+import com.example.subcriptionsmanagments_api.globalExceptionHandler.ApiException;
+import com.example.subcriptionsmanagments_api.globalExceptionHandler.ErrorCode;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
@@ -20,67 +20,72 @@ public class SubscriptionService {
         this.subscriptionRepository = subscriptionRepository;
     }
 
-    public List<Subscription> findAll() {
-        return subscriptionRepository.findAll();
+    public List<SubscriptionResponse> getAllSubscriptions() {
+
+        return subscriptionRepository.findAll().stream().map(this::mapToResponse).toList();
     }
 
-    public Subscription findById(Long id) {
-        return subscriptionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Subskrypcja o ID " + id + " nie istnieje!"));
+    public SubscriptionResponse getSubscriptionById(Long id) {
+        Subscription subscription = subscriptionRepository.findById(id)
+                .orElseThrow(() -> new ApiException(ErrorCode.SUBSCRIPTION_NOT_FOUND, id));
+        return mapToResponse(subscription);
     }
 
-    public Subscription addSubscription(Subscription subscription) {
-        if (subscription.getName() == null || subscription.getName().isEmpty()) {
-            throw new IllegalArgumentException("Nazwa subskrypcji nie moze byc pusta!");
+    public SubscriptionResponse addSubscription(SubscriptionRequest request) {
+        Subscription subscription = new Subscription();
+        Subscription savedSubscription = getSubscription(request, subscription);
+        return mapToResponse(savedSubscription);
+    }
+
+    public SubscriptionResponse updateByPutSubscription(Long id, SubscriptionRequest request) {
+       Subscription subscription = subscriptionRepository.findById(id)
+        .orElseThrow(() -> new ApiException(ErrorCode.SUBSCRIPTION_NOT_FOUND, id));
+       Subscription savedSubscription = getSubscription(request, subscription);
+       return mapToResponse(savedSubscription);
+    }
+
+    public SubscriptionResponse patchSubscription(Long id, SubscriptionPatchRequest request) {
+        Subscription subscription = subscriptionRepository.findById(id).
+                orElseThrow(() -> new ApiException(ErrorCode.SUBSCRIPTION_NOT_FOUND, id));
+
+        if(request.getName() != null) {
+            subscription.setName(request.getName());
         }
-        return subscriptionRepository.save(subscription);
-    }
-
-    public Subscription updateByPutSubscription(Long id, Subscription newSubscription) {
-        return subscriptionRepository.findById(id).map(subscription -> {
-            subscription.setName(newSubscription.getName());
-            subscription.setPrice(newSubscription.getPrice());
-            subscription.setRenewalDate(newSubscription.getRenewalDate());
-            return subscriptionRepository.save(subscription);
-        }).orElseThrow(() -> new RuntimeException("Subskrypcja o ID " + id + " nie istnieje"));
-    }
-
-    public Subscription patchSubscription(Long id, Map<String, Object> updates) {
-        Subscription subscription = subscriptionRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Subskrypcja o " + id + " nie istnieje"));
-
-        updates.forEach((key, value) -> {
-            switch (key) {
-                case "name":
-                    subscription.setName((String) value);
-                    break;
-                case "price":
-                    subscription.setPrice((Double.parseDouble(value.toString())));
-                    break;
-                case "renewalDate": // Obsługa daty
-                    if (value instanceof String) {
-                        try {
-                            LocalDate parsedDate = LocalDate.parse((String) value);
-                            subscription.setRenewalDate(parsedDate);
-                        } catch (DateTimeParseException e) {
-                            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Nieprawidłowy format daty. Użyj: YYYY-MM-DD");
-                        }
-                    } else {
-                        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "renewalDate musi być stringiem w formacie YYYY-MM-DD");
-                    }
-                    break;
-                default:
-                    throw new IllegalArgumentException("Nieznane pole: " + key);
-            }
-
-        });
-        return subscriptionRepository.save(subscription);
+        if(request.getRenewalDate() != null) {
+            subscription.setRenewalDate(request.getRenewalDate());
+        }
+        if(request.getPrice() != null) {
+            subscription.setPrice(request.getPrice());
+        }
+    Subscription savedSubscription = subscriptionRepository.save(subscription);
+        return mapToResponse(savedSubscription);
     }
 
 
     public void deleteSubscription(Long id) {
         if (!subscriptionRepository.existsById(id)) {
-            throw new RuntimeException("Subskrypcja o ID " + id + " nie istnieje!");
+            throw new ApiException(ErrorCode.SUBSCRIPTION_NOT_FOUND, id);
         }
         subscriptionRepository.deleteById(id);
     }
+
+    private Subscription getSubscription(SubscriptionRequest request , Subscription subscription){
+        subscription.setName(request.getName());
+        subscription.setPrice(request.getPrice());
+        subscription.setRenewalDate(request.getRenewalDate());
+        return subscriptionRepository.save(subscription);
+
+
+    }
+
+    public SubscriptionResponse mapToResponse(Subscription subscription) {
+        return new SubscriptionResponse(
+                subscription.getId(),
+                subscription.getName(),
+                subscription.getPrice(),
+                subscription.getRenewalDate()
+        );
+    }
+
+
 }

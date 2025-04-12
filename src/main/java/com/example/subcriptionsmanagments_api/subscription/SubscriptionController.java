@@ -1,17 +1,16 @@
 package com.example.subcriptionsmanagments_api.subscription;
 
 
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
 
-@Controller
 @RestController
-@RequestMapping("/api/subscriptions")
+@RequestMapping("/api/v1/subscriptions")
 public class SubscriptionController {
 
     private final SubscriptionService subscriptionService;
@@ -23,40 +22,26 @@ public class SubscriptionController {
     }
 
     @GetMapping
-    public List<Subscription> getAllSubscriptions() {
-        return subscriptionService.findAll();
+    public List<SubscriptionResponse> getAllSubscriptions() {
+        return subscriptionService.getAllSubscriptions();
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getSubscription(@PathVariable Long id) {
-        try {
-            Subscription subscription = subscriptionService.findById(id);
-            return ResponseEntity.ok(subscription);
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<SubscriptionResponse> getSubscription(@PathVariable Long id) {
+            SubscriptionResponse response = subscriptionService.getSubscriptionById(id);
+            return ResponseEntity.ok(response);
     }
 
     @PostMapping
-    public ResponseEntity<?> createSubscription(@RequestBody Subscription subscription) {
-        try {
-            Subscription savedSubscription = subscriptionService.addSubscription(subscription);
+    public ResponseEntity<SubscriptionResponse> createSubscription(@RequestBody @Valid SubscriptionRequest request) {
+            SubscriptionResponse savedSubscription = subscriptionService.addSubscription(request);
             return ResponseEntity.status(201).body(savedSubscription);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(400).body(e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body("Blad podczas zapisywania subskrypcji: " + e.getMessage());
-        }
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateSubscription(@PathVariable Long id, @RequestBody Subscription subscription) {
-        try {
-            Subscription updatedSubscription = subscriptionService.updateByPutSubscription(id, subscription);
+    public ResponseEntity<SubscriptionResponse> updateSubscription(@PathVariable Long id, @RequestBody @Valid SubscriptionRequest request) {
+            SubscriptionResponse updatedSubscription = subscriptionService.updateByPutSubscription(id, request);
             return ResponseEntity.ok(updatedSubscription);
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(400).body(e.getMessage());
-        }
     }
 
     @DeleteMapping("/{id}")
@@ -66,9 +51,12 @@ public class SubscriptionController {
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<?> patchSubscription(@PathVariable Long id, @RequestBody Map<String, Object> updates) {
-        Subscription patchedSubscription = subscriptionService.patchSubscription(id,updates);
-        return ResponseEntity.ok(patchedSubscription);
+    public ResponseEntity<SubscriptionResponse> patchSubscription(
+            @PathVariable Long id,
+            @RequestBody @Valid SubscriptionPatchRequest request) {
+        SubscriptionResponse updatedSubscription = subscriptionService.patchSubscription(id, request);
+
+        return ResponseEntity.ok(updatedSubscription);
     }
 
 }

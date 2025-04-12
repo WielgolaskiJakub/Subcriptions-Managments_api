@@ -1,9 +1,9 @@
-package org.example.subcriptionsmanagments_api;
+package com.example.subcriptionsmanagments_api;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
-@SpringBootTest
+@SpringBootTest(classes = SubcriptionsManagmentsApiApplication.class)
 class SubcriptionsManagmentsApiApplicationTests {
 
     @Test

@@ -1,16 +1,15 @@
 package com.example.subcriptionsmanagments_api.user;
 
 
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@Controller
 @RestController
-@RequestMapping("/api/users")
+@RequestMapping("/api/v1/users")
 public class UsersController {
 
     private final UsersService usersService;
@@ -21,40 +20,27 @@ public class UsersController {
     }
 
     @GetMapping
-    public List<Users> getAllUsers() {
+    public List<UsersResponse> getAllUsers() {
         return usersService.getAllUsers();
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Users> getUserById(@PathVariable Long id) {
-        try {
-            Users users = usersService.getUserById(id);
-            return ResponseEntity.ok(users);
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<UsersResponse> getUserById(@PathVariable long id) {
+            UsersResponse user = usersService.getUserById(id);
+            return ResponseEntity.ok(user);
     }
 
     @PostMapping
-    public ResponseEntity<?> createUser(@RequestBody Users user) {
-        try {
-            Users users = usersService.createUser(user);
-            return ResponseEntity.status(201).body(users);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(400).body(e.getMessage());
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(500).body("Blad pdczas zapisywania uzytkownika " + e.getMessage());
-        }
+    public ResponseEntity<?> createUser(@RequestBody @Valid UsersRequest request) {
+        UsersResponse user = usersService.createUser(request);
+        return ResponseEntity.status(201).body(user);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateUser(@PathVariable Long id, @RequestBody Users user) {
-        try {
-            Users users = usersService.updateByPutUser(id, user);
-            return ResponseEntity.ok(users);
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(400).body(e.getMessage());
-        }
+    public ResponseEntity<?> updateUser(@PathVariable Long id, @RequestBody @Valid UsersRequest request) {
+        UsersResponse user = usersService.updateUser(id, request);
+            return ResponseEntity.ok(user);
+
     }
 
     @DeleteMapping("/{id}")
@@ -64,4 +50,3 @@ public class UsersController {
     }
 }
 
-//walidacja danych, zautomatyzowana, globalna obsluga błędów

@@ -1,7 +1,7 @@
 package com.example.subcriptionsmanagments_api.globalExceptionHandler;
 
-
 import com.example.subcriptionsmanagments_api.common.MessageService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -21,52 +21,60 @@ public class GlobalExceptionHandler {
         this.messageService = messageService;
     }
 
-    // Obsługa ResponseStatusException (np. 404 Not Found)
+    @ExceptionHandler(ApiException.class)
+    public ResponseEntity<Map<String, Object>> handleApiException(ApiException ex, HttpServletRequest request) {
+        return buildErrorResponse(ex.getStatus(), ex.getMessageKey(), request.getRequestURI(), ex.getErrorCode().name(), ex.getArgs());
+    }
+
     @ExceptionHandler(ResponseStatusException.class)
-    public ResponseEntity<Map<String, Object>> handleResponseStatusException(ResponseStatusException ex) {
-        Map<String, Object> errorBody = new HashMap<>();
-        errorBody.put("timestamp", LocalDateTime.now());
-        errorBody.put("status", ex.getStatusCode().value());
-        errorBody.put("error", ex.getReason());
-
-        return ResponseEntity.status(ex.getStatusCode()).body(errorBody);
+    public ResponseEntity<Map<String, Object>> handleResponseStatusException(ResponseStatusException ex, HttpServletRequest request) {
+        return buildRawMessageResponse(HttpStatus.valueOf(ex.getStatusCode().value()), ex.getReason(), request.getRequestURI(), null);
     }
 
-    // Obsługa IllegalArgumentException (np. walidacja argumentów)
     @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<Map<String, Object>> handleIllegalArgument(IllegalArgumentException ex) {
-        Map<String, Object> errorBody = new HashMap<>();
-        errorBody.put("timestamp", LocalDateTime.now());
-        errorBody.put("status", HttpStatus.BAD_REQUEST.value());
-        errorBody.put("error", ex.getMessage());
-
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorBody);
+    public ResponseEntity<Map<String, Object>> handleIllegalArgument(IllegalArgumentException ex, HttpServletRequest request) {
+        return buildErrorResponse(ErrorCode.INVALID_ARGUMENT, request.getRequestURI());
     }
 
-    // Obsługa innych wyjątków (np. błędy wewnętrzne)
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<Map<String, Object>> handleGeneralException(Exception ex) {
-        Map<String, Object> errorBody = new HashMap<>();
-        errorBody.put("timestamp", LocalDateTime.now());
-        errorBody.put("status", HttpStatus.INTERNAL_SERVER_ERROR.value());
-        errorBody.put("error", "Wystąpił nieoczekiwany błąd: " + ex.getMessage());
-
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorBody);
+    public ResponseEntity<Map<String, Object>> handleGeneralException(Exception ex, HttpServletRequest request) {
+        ex.printStackTrace();
+        return buildErrorResponse(ErrorCode.INTERNAL_ERROR, request.getRequestURI(), ex.getMessage());
     }
 
-    @ExceptionHandler(UserNotFoundException.class)
-    public ResponseEntity<Map<String,Object>> handleUserNotFound(UserNotFoundException ex){
-        Map<String, Object> errorBody = createErrorBody(HttpStatus.NOT_FOUND, "User not found");
-
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorBody);
+    private ResponseEntity<Map<String, Object>> buildErrorResponse(HttpStatus status, String messageKey, String path, String errorCode, Object... args) {
+        String localizedMessage = messageService.getMessage(messageKey, args);
+        return buildRawMessageResponse(status, localizedMessage, path, errorCode);
     }
 
+    private ResponseEntity<Map<String, Object>> buildErrorResponse(ErrorCode errorCode, String path, Object... args) {
+        return buildErrorResponse(errorCode.getStatus(), errorCode.getMessageKey(), path, errorCode.name(), args);
+    }
+    @ExceptionHandler(org.springframework.web.bind.MethodArgumentNotValidException.class)
+    public ResponseEntity<Map<String, Object>> handleValidationException(
+            org.springframework.web.bind.MethodArgumentNotValidException ex,
+            HttpServletRequest request
+    ) {
+        String errorMessage = ex.getBindingResult()
+                .getFieldErrors()
+                .stream()
+                .map(fieldError -> fieldError.getDefaultMessage())
+                .findFirst()
+                .orElse("Błąd walidacji");
 
-    private Map<String, Object> createErrorBody(HttpStatus status, String messageKey, Object... args) {
+        return buildRawMessageResponse(HttpStatus.BAD_REQUEST, errorMessage, request.getRequestURI(),null);
+    }
+
+    private ResponseEntity<Map<String, Object>> buildRawMessageResponse(HttpStatus status, String message, String path, String errorCode) {
         Map<String, Object> errorBody = new HashMap<>();
         errorBody.put("timestamp", LocalDateTime.now());
         errorBody.put("status", status.value());
-        errorBody.put("error", messageService.getMessage(messageKey, args));
-        return errorBody;
+        errorBody.put("error", message);
+        errorBody.put("path", path);
+        if (errorCode != null) {
+            errorBody.put("errorCode", errorCode);
+        }
+        return ResponseEntity.status(status).body(errorBody);
     }
+
 }
