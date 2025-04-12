@@ -32,13 +32,12 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<Map<String, Object>> handleIllegalArgument(IllegalArgumentException ex, HttpServletRequest request) {
+    public ResponseEntity<Map<String, Object>> handleIllegalArgument(HttpServletRequest request) {
         return buildErrorResponse(ErrorCode.INVALID_ARGUMENT, request.getRequestURI());
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleGeneralException(Exception ex, HttpServletRequest request) {
-        ex.printStackTrace();
         return buildErrorResponse(ErrorCode.INTERNAL_ERROR, request.getRequestURI(), ex.getMessage());
     }
 
